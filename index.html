@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu d'évitement</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #add8e6; /* Bleu clair */
+            background-image: url('https://your-clouds-image-url.jpg'); /* Remplacez l'URL par l'image de nuages de votre choix */
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #player {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background-color: blue;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .obstacle {
+            position: absolute;
+            bottom: 0;
+            left: 100%;
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            animation: obstacleAnimation 2s linear infinite;
+        }
+
+        @keyframes obstacleAnimation {
+            to {
+                left: -50px;
+            }
+        }
+
+        .particles {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            animation: particlesAnimation 0.5s linear infinite;
+        }
+
+        @keyframes particlesAnimation {
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="player"></div>
+        <div class="obstacle"></div>
+        <div class="particles"></div>
+        <div id="score">Score: 0</div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const player = document.getElementById("player");
+            const particles = document.querySelector(".particles");
+            const obstacles = document.querySelectorAll(".obstacle");
+            const scoreElement = document.getElementById("score");
+            let isJumping = false;
+            let score = 0;
+
+            document.addEventListener("keydown", function (event) {
+                if ((event.code === "Space" || event.code === "KeyW") && !isJumping) {
+                    jump();
+                } else if (event.code === "ArrowLeft") {
+                    spawnParticles();
+                }
+            });
+
+            function jump() {
+                isJumping = true;
+                player.style.transform = "translateX(-50%) translateY(-150px)";
+                setTimeout(() => {
+                    player.style.transform = "translateX(-50%) translateY(0)";
+                    setTimeout(() => {
+                        isJumping = false;
+                        checkCollision();
+                    }, 400);
+                }, 400);
+            }
+
+            function spawnParticles() {
+                particles.style.left = player.style.left;
+                particles.style.bottom = player.style.bottom;
+                particles.style.opacity = "1";
+
+                setTimeout(() => {
+                    particles.style.opacity = "0";
+                }, 500);
+            }
+
+            function checkCollision() {
+                const playerRect = player.getBoundingClientRect();
+
+                obstacles.forEach((obstacle) => {
+                    const obstacleRect = obstacle.getBoundingClientRect();
+                    const distanceToObstacle = obstacleRect.left - playerRect.right;
+
+                    if (
+                        playerRect.bottom > obstacleRect.top &&
+                        playerRect.top < obstacleRect.bottom &&
+                        playerRect.right > obstacleRect.left &&
+                        playerRect.left < obstacleRect.right
+                    ) {
+                        gameOver();
+                    }
+                });
+            }
+
+            function updateScore() {
+                score += 1;
+                scoreElement.textContent = "Score: " + score;
+            }
+
+            function gameOver() {
+                alert("Game Over! Score: " + score);
+                window.location.reload(); // Recharge la page pour recommencer
+            }
+
+            function gameLoop() {
+                checkCollision();
+
+                obstacles.forEach((obstacle) => {
+                    if (obstacle.offsetLeft < -50) {
+                        obstacle.style.left = "100%";
+                        updateScore();
+                    }
+                });
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            setInterval(() => {
+                updateScore();
+            }, 200);
+
+            gameLoop();
+        });
+    </script>
+</body>
+</html>
